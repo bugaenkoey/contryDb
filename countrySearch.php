@@ -10,9 +10,6 @@ echo "countrySearch";
 	<div><input type="submit" ></div>
 </form>
 
-
-
 <?php
 var_dump($_POST);
-
 ?>
