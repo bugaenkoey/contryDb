@@ -26,3 +26,26 @@ $result= $conn->query("INSERT INTO contryes (
     );");
     include_once "index.php";
 ?>
+<!-- 
+INSERT INTO `contryes` 
+    (
+    `id`, 
+    `contry`, 
+    `capital`,
+    `Alpha-2`
+    ) 
+    VALUES 
+        (
+        NULL, 
+        'Великобритания', 
+        'Лондон', 
+        'GB'
+        ), 
+        (
+        NULL, 
+        'Германия', 
+        'Берлин', 
+        'DE'
+        );  
+
+ -->
