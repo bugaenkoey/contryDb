@@ -8,6 +8,8 @@
 4. Создать php-скрипт, который берет список стран из текстового файла, 
 структуру файла продумать самостоятельно. (дополнительно) -->
 
+
+
 <?php
 session_start();
 $contry = "";
@@ -27,45 +29,49 @@ if ($conn->connect_error) {
 }
 echo "<b style='color:green;'> Conect OK </b>";
 
+createTable($conn);
 
 if (isset($_REQUEST["insert"])) {
-    echo "\n insert \n";
     insertPost($conn);
     $contry   = " WHERE contry = '" . $_POST['contry'] . "'";
     $array = select($conn);
 } elseif (isset($_REQUEST["search"])) {
-    echo "\n search \n";
     $contry   = " WHERE contry = '" . $_POST['contry'] . "'";
     $array = select($conn);
-} elseif (isset($_REQUEST["all"])) {
-    echo "\n all \n";
 } elseif (isset($_REQUEST["load"])) {
-    echo "\n load \n";
     load($conn);
 } elseif (isset($_REQUEST["save"])) {
-    echo "\n save \n";
     save($conn);
 } else {
-    echo "\n requesr - free \n";
-
     $array = select($conn);
 }
 
+function createTable($conn)
+{
 
+    $tablecontryes = "CREATE TABLE `contryes` (
+        `contry` varchar(60) NOT NULL,
+        `capital` varchar(168),
+        `Alpha-2` varchar(2),
+        PRIMARY KEY (`contry`)
+        );";
+
+    $result = $conn->query($tablecontryes);
+}
 
 function insertPost($conn)
 {
     $result = $conn->query("INSERT INTO contryes (
-        id, 
         contry, 
         capital,
         `Alpha-2`) VALUES (
-            NULL,
             '" . $_POST["contry"] . "',
             '" . $_POST["capital"] . "',
             '" . $_POST["Alpha-2"] . "' 
         );");
 }
+
+
 
 function select($conn)
 {
@@ -80,48 +86,49 @@ function select($conn)
 
 function load($conn)
 {
-    // LOAD DATA INFILE '/tmp/test.txt' INTO TABLE test
-    //   FIELDS TERMINATED BY ' : '  LINES TERMINATED BY '\n';
-    $loadDataInFile = "
-LOAD DATA INFILE 'C:/xampp/htdocs/contryDb' INTO TABLE test
-  FIELDS TERMINATED BY ','  LINES TERMINATED BY '\n';
-  ";
+    global $fileName;
+    $stringData = file_get_contents($fileName);
 
-    // global $fileName;
-    // $stringData = file_get_contents($fileName);
-    // $arrayData = explode(";", $stringData);
-    // $arrayData2 = array();
-    // foreach ($arrayData as $item) {
-    //     $arrayColum = explode("|", $item);
-    //     array_push($arrayData2,$arrayColum);
-    //     // $arrayData
-    // }
-    // echo $stringData;
-    $result = $conn->query($loadDataInFile);
-    // $result = $conn->query($stringData);
-    echo "RESULT " . $result;
-    // print_r ($arrayData2);
+    $arrayData = explode("\n", $stringData);
+    $arrayData2 = array();
+    foreach ($arrayData as $item) {
+        $arrayColum = explode(",", $item);
+        array_push($arrayData2, $arrayColum);
+    }
+
+    $loadDataInFile = " INSERT IGNORE INTO `contryes` SET";
+
+    foreach ($arrayData2 as $row) {
+        $insertIgnore =  $loadDataInFile .
+            " `contry` = '" . $row[0] .
+            "', `capital` = '" . $row[1] .
+            "', `Alpha-2` = '" . $row[2] . "';";
+        $result = $conn->query($insertIgnore);
+    }
     echo "<b style='color:green;'> Load OK </b>";
 }
 
 function save($conn)
 {
-    echo "<div>isset array save</div>";
-    $sqlQuery = "SELECT 
-    contry, 
-    capital,
-    `Alpha-2` FROM contryes ;";
-    $result   = $conn->query($sqlQuery);
-    $array    = $result->fetch_all(MYSQLI_ASSOC);
+    // $sqlQuery = "SELECT 
+    // contry, 
+    // capital,
+    // `Alpha-2` FROM contryes ;";
+    // $result   = $conn->query($sqlQuery);
+    // $array    = $result->fetch_all(MYSQLI_ASSOC);
+    global $contry;
+    $contry = "";
+    $array = select($conn);
     $data = "";
     foreach ($array as $item) {
         foreach ($item as $word) {
             $data = $data . $word . ",";
         }
-        $data = substr($data, 0, -1);
+        $data = substr($data, 0, -1); //remove separator in end
         $data = $data . "\n";
     }
-    echo $data;
+    $data = substr($data, 0, -1); //remove empty array in end
+    // echo $data;
     global $fileName;
     file_put_contents($fileName, $data);
     echo "<b style='color:green;'> SAVE OK </b>";
@@ -132,7 +139,7 @@ function save($conn)
 
     <a href="index.php">index.php</a>&nbsp;&nbsp;
     <a href="addContry.php">addContry</a>&nbsp;&nbsp;
-    <a href="searchCountry.php">countrySearch</a>&nbsp;&nbsp;
+    <a href="searchCountry.php">searchCountry</a>&nbsp;&nbsp;
     <a href="index.php?load=1">load</a>&nbsp;&nbsp;
     <a href="index.php?save=1">save</a>&nbsp;&nbsp;
 
@@ -142,7 +149,7 @@ function save($conn)
     <thead>
         <tr>
             <!-- <th colspan="2">&nbsp;</th> -->
-            <th>id</th>
+            <!-- <th>id</th> -->
             <th>contry</th>
             <th>capital</th>
             <th>Alpha-2</th>
@@ -154,7 +161,7 @@ function save($conn)
             <tr>
                 <!-- <td><button>Edit</button></td>
                 <td><button>Delete</button></td> -->
-                <td><?php echo $value['id']; ?></td>
+                <!-- <td><?php /*echo $value['id']; */ ?></td> -->
                 <td><?php echo $value['contry']; ?></td>
                 <td><?php echo $value['capital']; ?></td>
                 <td><?php echo $value['Alpha-2']; ?></td>
